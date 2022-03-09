@@ -1,3 +1,6 @@
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+
 def preprocess_data(in_file, out_file):
     col_key1 = {"admin.":0,"unknown":1,"unemployed":2,"management":3,"housemaid":4,"entrepreneur":5,"student":6,"blue-collar":7,"self-employed":8,"retired":9,"technician":10,"services":11}
     col_key2 = {"married":12,"divorced":13,"single":14,"unknown":15}
@@ -30,6 +33,18 @@ def preprocess_data(in_file, out_file):
         newline += line[11] + "," + line[12] + "," + line[13] + "," + line[15] + "," + line[16] + "," + line[17] + "," + line[18] + "," + line[19] + "," + str(col_key11[line[20]]) + "\n"
         out_file.write(newline)
 
+def split_norm_data(data_array):
+    sorted_data = data_array[data_array[:, -1].argsort()]
+
+    scaler = MinMaxScaler(feature_range=(0,1))
+    normalized_data = scaler.fit_transform(sorted_data)
+
+    neg = normalized_data[:36548]
+    pos = normalized_data[36548:]
+
+    np.save("normalized_neg_data", neg)
+    np.save("normalized_pos_data", pos)
+
 def main():
     # Open data file for read. Open output file for writing.
     in_file = open("bank-additional-full.csv", "r")
@@ -38,6 +53,11 @@ def main():
     preprocess_data(in_file, out_file)
     in_file.close()
     out_file.close()
+
+    in_file = open("processed_data.csv", "r")
+    in_file.close()
+    all_data = np.genfromtxt('processed_data.csv', delimiter=',')
+    split_norm_data(all_data)
     pass
 
 if __name__ == "__main__":
