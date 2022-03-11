@@ -99,7 +99,7 @@ def predictor(data_input, training_result):
     return 1 if good_result > not_good else 0, feature_prediction
 
 
-def readfile(filename):
+def read_file(filename):
     try:
         # Read raw dataset
         raw_data = np.loadtxt(filename, delimiter=",")
@@ -110,18 +110,33 @@ def readfile(filename):
         print("Cannot read files. Please check your dataset!")
         return None
 
+<<<<<<< HEAD
+=======
+
+def create_data_set(draw_data):
+>>>>>>> 0a6d6c90835d856f50500e7995d1d7aa0bb4c637
 
 def create_data_set(draw_data):
     num_of_col = draw_data.shape[1]
 
+<<<<<<< HEAD
     # get even rows 
     training_set = draw_data[1::2, 0:num_of_col - 1]
+=======
+    # get even rows
+    training_set = draw_data[1::2, 0:num_of_col-1]
+>>>>>>> 0a6d6c90835d856f50500e7995d1d7aa0bb4c637
 
     # get even row of the last column
     training_target_set = draw_data[1::2, num_of_col - 1:num_of_col]
 
+<<<<<<< HEAD
     # get even rows 
     testing_set = draw_data[::2, 0:num_of_col - 1]
+=======
+    # get even rows
+    testing_set = draw_data[::2, 0:num_of_col-1]
+>>>>>>> 0a6d6c90835d856f50500e7995d1d7aa0bb4c637
 
     # get odd row of last column
     testing_target_set = draw_data[::2, num_of_col -
@@ -138,7 +153,7 @@ def train_and_test(training_set, training_target_set, testing_set, testing_targe
     print("== The Prediction for Testing set======")
 
     confusion_matrix = np.full(
-        (2, 2), 0).astype(int)
+        (2, 2,  testing_set.shape[1] + 1), 0).astype(int)
 
     for i in range(0, testing_set.shape[0]):
 
@@ -163,7 +178,11 @@ def train_and_test(training_set, training_target_set, testing_set, testing_targe
         sum_correct_case = np.sum(diagonal)
         sum_all = np.sum(cfm)
 
+<<<<<<< HEAD
         accuracy = 0 if sum_all == 0 else (sum_correct_case / sum_all * 100)
+=======
+        accuracy = 0 if sum_all == 0 else (sum_correct_case/sum_all * 100)
+>>>>>>> 0a6d6c90835d856f50500e7995d1d7aa0bb4c637
 
         if i < testing_set.shape[1]:
             print(
@@ -176,6 +195,20 @@ def train_and_test(training_set, training_target_set, testing_set, testing_targe
     print("## Final accuracy  = ", round(accuracy, 3))
 
 
+<<<<<<< HEAD
 training_set, training_target_set, testing_set, testing_target_set = readfile(DATA_PATH)
 
 train_and_test(training_set, training_target_set, testing_set, testing_target_set)
+=======
+if __name__ == "__main__":
+    # PATH FILES
+    DATA_PATH = "./processed_data.csv"
+
+    data = read_file(DATA_PATH)
+
+    training_set, training_target_set, testing_set, testing_target_set = create_data_set(
+        data)
+
+    train_and_test(training_set, training_target_set,
+                   testing_set, testing_target_set)
+>>>>>>> 0a6d6c90835d856f50500e7995d1d7aa0bb4c637
