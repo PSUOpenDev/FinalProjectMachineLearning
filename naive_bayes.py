@@ -8,7 +8,6 @@
 # Dependencies
 import numpy as np
 import math
-from sklearn.metrics import accuracy_score
 
 
 # GLOBAL VARIABLES
@@ -144,8 +143,6 @@ def train_and_test(train_set, train_target_set, test_set, test_target_set):
     accuracy = None
 
     for i in range(0, test_set.shape[1] + 1):
-        accuracy = 0.0
-
         cfm = confusion_matrix[:, :, i]
         diagonal = np.diagonal(cfm)
         sum_correct_case = np.sum(diagonal)
