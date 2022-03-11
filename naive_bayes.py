@@ -1,3 +1,12 @@
+# ==================================================================================================================== #
+# Contributors: Tri Le + Phuoc Nguyen
+# Description: Naive Bayes
+# Filename: naive_bayes.py
+# ==================================================================================================================== #
+# Dependencies
+import math
+import numpy as np
+from sklearn.metrics import accuracy_score, confusion_matrix
 import numpy as np
 import math
 
@@ -88,6 +97,20 @@ def predictor(data,  training_result):
     return 1 if spam_result > nospam_result else 0, feature_prediction
 
 
+def readfile(filename):
+    try:
+        # Read raw dataset
+        raw_data = np.loadtxt(filename, delimiter=",")
+        return raw_data
+
+    # File not found
+    except FileNotFoundError:
+        print("Cannot read files. Please check your dataset!")
+        return None
 
 if __name__ == "__main__":
-    print('Hello')
+    # PATH FILES
+    DATA_PATH = "./processed_data.csv"
+
+    data = readfile(DATA_PATH)
+    print(data.shape)
