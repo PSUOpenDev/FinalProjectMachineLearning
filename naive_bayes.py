@@ -76,25 +76,25 @@ def training(data_set, target_set):
 
 def predictor(data,  training_result):
 
-    spam_result = training_result[GOOD]
-    nospam_result = training_result[NOTGOOD]
+    good_result = training_result[GOOD]
+    notgood = training_result[NOTGOOD]
 
     feature_prediction = np.full((1, data.shape[1]), 0).astype(int)
 
     for i in range(0, data.shape[1]):
-        spam_norm = log_normal_dist(data[0, i],  training_result[GOOD_STATICTIS]
+        good_norm = log_normal_dist(data[0, i],  training_result[GOOD_STATICTIS]
                                     [i][MEAN],  training_result[GOOD_STATICTIS][i][STANDARD_DEVIATION])
 
-        nospam_norm = log_normal_dist(data[0, i],  training_result[NOTGOOD_STATICTIS]
+        notgood_norm = log_normal_dist(data[0, i],  training_result[NOTGOOD_STATICTIS]
                                       [i][MEAN],  training_result[NOTGOOD_STATICTIS][i][STANDARD_DEVIATION])
 
-        spam_result += spam_norm
-        nospam_result += nospam_norm
+        good_result += good_norm
+        notgood += notgood_norm
 
-        feature_prediction[0, i] = 1 if spam_norm + training_result[GOOD] > nospam_norm + \
+        feature_prediction[0, i] = 1 if good_norm + training_result[GOOD] > notgood_norm + \
             training_result[NOTGOOD] else 0
 
-    return 1 if spam_result > nospam_result else 0, feature_prediction
+    return 1 if good_result > notgood else 0, feature_prediction
 
 
 def readfile(filename):
