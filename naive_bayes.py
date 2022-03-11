@@ -8,7 +8,7 @@
 # Dependencies
 import numpy as np
 import math
-
+from sklearn.model_selection import train_test_split
 
 # GLOBAL VARIABLES
 MEAN = 0
@@ -62,9 +62,9 @@ def log_normal_dist(data_input, mean, sdd):
 
 
 def training(data_set, target_set):
-    def train(data_set, target_set):
+    def train(data_training, target_set_training):
         result = {}
-        good_prob = good_probability(target_set)
+        good_prob = good_probability(target_set_training)
 
         print("======== Training Set ========")
         print("good probability = ", round(good_prob, 3))
@@ -74,30 +74,76 @@ def training(data_set, target_set):
         result[GOOD] = np.log(good_prob)
         result[NOT_GOOD] = np.log(1 - good_prob)
 
-        good_index_set = np.where(target_set == 1)
-        not_good_index_set = np.where(target_set == 0)
+        good_index_set = np.where(target_set_training == 1)
+        not_good_index_set = np.where(target_set_training == 0)
 
-        good_set = np.array([data_set[i, :] for i in good_index_set[0]])
-        not_good_set = np.array([data_set[i, :] for i in not_good_index_set[0]])
+        good_set = np.array([data_training[i, :] for i in good_index_set[0]])
+        not_good_set = np.array([data_training[i, :] for i in not_good_index_set[0]])
 
         result[GOOD_STATISTIC] = [feature_statistic(
             good_set, col) for col in range(0, good_set.shape[1])]
         result[NOT_GOOD_STATISTIC] = [feature_statistic(
             not_good_set, col) for col in range(0, not_good_set.shape[1])]
 
-        return result 
+        return result
 
-    #Step 1: Divide training set into two parts with the ratio to A=7: B=3 
-    #Step 2: Run training for A  => result_of_training
-    #Step 3  Run testing for B and remove all features that lower than the average
-    #Step 4: Return the result with ignoring columns for the test
+    def test(test_set, test_target_set, training_result):
+        ignore_col = dict()
+        prob_dict = list()
 
-    pass
+        print("== The Prediction for Testing set======")
+        confusion_matrix = np.full((2, 2, test_set.shape[1] + 1), 0).astype(int)
+
+        for i in range(0, test_set.shape[0]):
+            predict, feature_prediction = predictor(test_set[i:i + 1, :], training_result, None)
+            confusion_matrix[predict, test_target_set[i], test_set.shape[1]] += 1
+
+            for j in range(0, test_set.shape[1]):
+                confusion_matrix[feature_prediction[0, j], test_target_set[i], j] += 1
+
+        accuracy = None
+
+        for i in range(0, test_set.shape[1] + 1):
+            cfm = confusion_matrix[:, :, i]
+            diagonal = np.diagonal(cfm)
+            sum_correct_case = np.sum(diagonal)
+            sum_all = np.sum(cfm)
+
+            accuracy = 0 if sum_all == 0 else (sum_correct_case / sum_all * 100)
+
+            if i < test_set.shape[1]:
+                prob_dict.append((i, accuracy))
+
+        prob_dict = np.array(prob_dict)
+        s = 0
+        for p in prob_dict:
+            s += p[1]
+        avg_prob = s / len(prob_dict)
+
+        for p in prob_dict:
+            if p[1] < avg_prob:
+                ignore_col[p[0]] = True
+        return ignore_col
+
+    # Step 1: Divide training set into two parts with the ratio to A=7: B=3
+    train_data, test_data, train_data_target, test_data_target = train_test_split(
+        data_set,
+        target_set,
+        test_size=0.3,
+        random_state=42
+    )
+
+    # Step 2: Run training for A  => result_of_training
+    result_of_training = train(train_data, train_data_target)
+
+    # Step 3  Run testing for B and remove all features that lower than the average
+    ignore_column = test(test_data, test_data_target, result_of_training)
+    # Step 4: Return the result with ignoring columns for the test
+    return result_of_training, ignore_column
 
 
-
-def predictor(data_input, training_result,ignoring_column):
-    #Don't use column in ignoring column for testing 
+def predictor(data_input, training_result, ignoring_column):
+    # Don't use column in ignoring column for testing
 
     good_result = training_result[GOOD]
     not_good = training_result[NOT_GOOD]
@@ -105,24 +151,25 @@ def predictor(data_input, training_result,ignoring_column):
     feature_prediction = np.full((1, data_input.shape[1]), 0).astype(int)
 
     for i in range(0, data_input.shape[1]):
-        good_norm = log_normal_dist(
-            data_input[0, i],
-            training_result[GOOD_STATISTIC][i][MEAN],
-            training_result[GOOD_STATISTIC][i][STANDARD_DEVIATION]
-        )
+        if ignoring_column is not None and i not in ignoring_column:
+            good_norm = log_normal_dist(
+                data_input[0, i],
+                training_result[GOOD_STATISTIC][i][MEAN],
+                training_result[GOOD_STATISTIC][i][STANDARD_DEVIATION]
+            )
 
-        not_good_norm = log_normal_dist(
-            data_input[0, i],
-            training_result[NOT_GOOD_STATISTIC][i][MEAN],
-            training_result[NOT_GOOD_STATISTIC][i][STANDARD_DEVIATION]
-        )
+            not_good_norm = log_normal_dist(
+                data_input[0, i],
+                training_result[NOT_GOOD_STATISTIC][i][MEAN],
+                training_result[NOT_GOOD_STATISTIC][i][STANDARD_DEVIATION]
+            )
 
-        good_result += good_norm
-        not_good += not_good_norm
+            good_result += good_norm
+            not_good += not_good_norm
 
-        feature_prediction[0, i] = 1 \
-            if good_norm + training_result[GOOD] > not_good_norm + training_result[NOT_GOOD] \
-            else 0
+            feature_prediction[0, i] = 1 \
+                if good_norm + training_result[GOOD] > not_good_norm + training_result[NOT_GOOD] \
+                else 0
 
     return 1 if good_result > not_good else 0, feature_prediction
 
@@ -146,15 +193,13 @@ def create_data_set(draw_data):
 
 
 def train_and_test(train_set, train_target_set, test_set, test_target_set):
-
-    training_result = training(train_set, train_target_set)
+    training_result, ignore_col = training(train_set, train_target_set)
 
     print("== The Prediction for Testing set======")
     confusion_matrix = np.full((2, 2, test_set.shape[1] + 1), 0).astype(int)
 
     for i in range(0, test_set.shape[0]):
-        predict, feature_prediction = predictor(
-            test_set[i:i + 1, :], training_result)
+        predict, feature_prediction = predictor(test_set[i:i + 1, :], training_result, ignore_col)
         confusion_matrix[predict, test_target_set[i], test_set.shape[1]] += 1
 
         for j in range(0, test_set.shape[1]):
@@ -172,8 +217,7 @@ def train_and_test(train_set, train_target_set, test_set, test_target_set):
         accuracy = 0 if sum_all == 0 else (sum_correct_case / sum_all * 100)
 
         if i < test_set.shape[1]:
-            print(
-                "- The accuracy of the feature {0}'s prediction = {1}".format(i + 1, round(accuracy, 3)))
+            print("- The accuracy of the feature {0}'s prediction = {1}".format(i + 1, round(accuracy, 3)))
 
     print("=======================================")
     print("The Confusion Matrix of Testing set:")
@@ -190,7 +234,5 @@ if __name__ == "__main__":
 
     # Perform Naive Bayes algorithm
     if data is not None:
-        training_set, training_target_set, testing_set, testing_target_set = create_data_set(
-            data)
-        train_and_test(training_set, training_target_set,
-                       testing_set, testing_target_set)
+        training_set, training_target_set, testing_set, testing_target_set = create_data_set(data)
+        train_and_test(training_set, training_target_set,testing_set, testing_target_set)
