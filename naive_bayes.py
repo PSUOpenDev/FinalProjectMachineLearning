@@ -96,7 +96,7 @@ def predictor(data,  training_result):
     return 1 if good_result > notgood else 0, feature_prediction
 
 
-def readfile(filename):
+def read_file(filename):
     try:
         # Read raw dataset
         raw_data = np.loadtxt(filename, delimiter=",")
@@ -107,17 +107,18 @@ def readfile(filename):
         print("Cannot read files. Please check your dataset!")
         return None
 
+
 def create_data_set(draw_data):
 
     num_of_col = draw_data.shape[1]
 
-    # get even rows 
+    # get even rows
     training_set = draw_data[1::2, 0:num_of_col-1]
 
     # get even row of the last column
     training_target_set = draw_data[1::2, num_of_col-1:num_of_col]
 
-    # get even rows 
+    # get even rows
     testing_set = draw_data[::2, 0:num_of_col-1]
 
     # get odd row of last column
@@ -135,7 +136,7 @@ def train_and_test(training_set, training_target_set, testing_set, testing_targe
     print("== The Prediction for Testing set======")
 
     confusion_matrix = np.full(
-        (2, 2), 0).astype(int)
+        (2, 2,  testing_set.shape[1] + 1), 0).astype(int)
 
     for i in range(0, testing_set.shape[0]):
 
@@ -159,7 +160,7 @@ def train_and_test(training_set, training_target_set, testing_set, testing_targe
         diagonal = np.diagonal(cfm)
         sum_correct_case = np.sum(diagonal)
         sum_all = np.sum(cfm)
-        
+
         accuracy = 0 if sum_all == 0 else (sum_correct_case/sum_all * 100)
 
         if i < testing_set.shape[1]:
@@ -173,21 +174,14 @@ def train_and_test(training_set, training_target_set, testing_set, testing_targe
     print("## Final accuracy  = ", round(accuracy, 3))
 
 
-training_set, training_target_set, testing_set, testing_target_set = read_csv(
-    './spambase/spambase.data')
-
-train_and_test(training_set, training_target_set,
-               testing_set, testing_target_set)
-
-
-
-
 if __name__ == "__main__":
     # PATH FILES
     DATA_PATH = "./processed_data.csv"
 
-    data = readfile(DATA_PATH)
+    data = read_file(DATA_PATH)
 
- 
+    training_set, training_target_set, testing_set, testing_target_set = create_data_set(
+        data)
 
-    print(data.shape)
+    train_and_test(training_set, training_target_set,
+                   testing_set, testing_target_set)
