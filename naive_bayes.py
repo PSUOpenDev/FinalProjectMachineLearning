@@ -16,8 +16,8 @@ STANDARD_DEVIATION = 1
 GOOD = 1
 NOTGOOD = 0
 
-GOOD_STATICTIS = 2
-NOTGOOD_STATICTIS = 3
+GOOD_STATISTIC = 2
+NOTGOOD_STATISTIC = 3
 
 SQRT_2PI = math.sqrt(2.0 * math.pi)
 
@@ -55,7 +55,6 @@ def training(data_set, target_set):
     result = {}
     good_prob = good_probability(target_set)
 
-
     result[GOOD] = np.log(good_prob)
     result[NOTGOOD] = np.log(1 - good_prob)
 
@@ -65,11 +64,11 @@ def training(data_set, target_set):
     good_set = np.array([data_set[i, :] for i in good_index_set[0]])
     notgood_set = np.array([data_set[i, :] for i in notgood_index_set[0]])
 
-    result[GOOD_STATICTIS] = [feature_statistic(good_set, col)
+    result[GOOD_STATISTIC] = [feature_statistic(good_set, col)
                               for col in range(0, good_set.shape[1])]
 
-    result[NOTGOOD_STATICTIS] = [feature_statistic(notgood_set, col)
-                                  for col in range(0, notgood_set.shape[1])]
+    result[NOTGOOD_STATISTIC] = [feature_statistic(notgood_set, col)
+                                 for col in range(0, notgood_set.shape[1])]
 
     return result
 
@@ -82,11 +81,11 @@ def predictor(data,  training_result):
     feature_prediction = np.full((1, data.shape[1]), 0).astype(int)
 
     for i in range(0, data.shape[1]):
-        good_norm = log_normal_dist(data[0, i],  training_result[GOOD_STATICTIS]
-                                    [i][MEAN],  training_result[GOOD_STATICTIS][i][STANDARD_DEVIATION])
+        good_norm = log_normal_dist(data[0, i],  training_result[GOOD_STATISTIC]
+                                    [i][MEAN],  training_result[GOOD_STATISTIC][i][STANDARD_DEVIATION])
 
-        notgood_norm = log_normal_dist(data[0, i],  training_result[NOTGOOD_STATICTIS]
-                                      [i][MEAN],  training_result[NOTGOOD_STATICTIS][i][STANDARD_DEVIATION])
+        notgood_norm = log_normal_dist(data[0, i],  training_result[NOTGOOD_STATISTIC]
+                                       [i][MEAN],  training_result[NOTGOOD_STATISTIC][i][STANDARD_DEVIATION])
 
         good_result += good_norm
         notgood += notgood_norm
@@ -108,9 +107,32 @@ def readfile(filename):
         print("Cannot read files. Please check your dataset!")
         return None
 
+def create_data_set(draw_data):
+
+    num_of_col = draw_data.shape[1]
+
+    # get even rows 
+    training_set = draw_data[1::2, 0:num_of_col-1]
+
+    # get even row of the last column
+    training_target_set = draw_data[1::2, num_of_col-1:num_of_col]
+
+    # get even rows 
+    testing_set = draw_data[::2, 0:num_of_col-1]
+
+    # get odd row of last column
+    testing_target_set = draw_data[::2, num_of_col -
+                                   1:num_of_col]
+
+    return training_set, training_target_set.astype(int), testing_set, testing_target_set.astype(int)
+
+
 if __name__ == "__main__":
     # PATH FILES
     DATA_PATH = "./processed_data.csv"
 
     data = readfile(DATA_PATH)
+
+ 
+
     print(data.shape)
