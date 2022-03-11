@@ -62,25 +62,43 @@ def log_normal_dist(data_input, mean, sdd):
 
 
 def training(data_set, target_set):
-    result = {}
-    good_prob = good_probability(target_set)
+    def train(data_set, target_set):
+        result = {}
+        good_prob = good_probability(target_set)
 
-    result[GOOD] = np.log(good_prob)
-    result[NOT_GOOD] = np.log(1 - good_prob)
+        print("======== Training Set ========")
+        print("good probability = ", round(good_prob, 3))
+        print("not good probability = ", round(1 - good_prob, 3))
+        print("==============================")
 
-    good_index_set = np.where(target_set == 1)
-    not_good_index_set = np.where(target_set == 0)
+        result[GOOD] = np.log(good_prob)
+        result[NOT_GOOD] = np.log(1 - good_prob)
 
-    good_set = np.array([data_set[i, :] for i in good_index_set[0]])
-    not_good_set = np.array([data_set[i, :] for i in not_good_index_set[0]])
+        good_index_set = np.where(target_set == 1)
+        not_good_index_set = np.where(target_set == 0)
 
-    result[GOOD_STATISTIC] = [feature_statistic(good_set, col) for col in range(0, good_set.shape[1])]
-    result[NOT_GOOD_STATISTIC] = [feature_statistic(not_good_set, col) for col in range(0, not_good_set.shape[1])]
+        good_set = np.array([data_set[i, :] for i in good_index_set[0]])
+        not_good_set = np.array([data_set[i, :] for i in not_good_index_set[0]])
 
-    return result
+        result[GOOD_STATISTIC] = [feature_statistic(
+            good_set, col) for col in range(0, good_set.shape[1])]
+        result[NOT_GOOD_STATISTIC] = [feature_statistic(
+            not_good_set, col) for col in range(0, not_good_set.shape[1])]
+
+        return result 
+
+    #Step 1: Divide training set into two parts with the ratio to A=7: B=3 
+    #Step 2: Run training for A  => result_of_training
+    #Step 3  Run testing for B and remove all features that lower than the average
+    #Step 4: Return the result with ignoring columns for the test
+
+    pass
 
 
-def predictor(data_input, training_result):
+
+def predictor(data_input, training_result,ignoring_column):
+    #Don't use column in ignoring column for testing 
+
     good_result = training_result[GOOD]
     not_good = training_result[NOT_GOOD]
 
@@ -128,17 +146,20 @@ def create_data_set(draw_data):
 
 
 def train_and_test(train_set, train_target_set, test_set, test_target_set):
+
     training_result = training(train_set, train_target_set)
 
     print("== The Prediction for Testing set======")
     confusion_matrix = np.full((2, 2, test_set.shape[1] + 1), 0).astype(int)
 
     for i in range(0, test_set.shape[0]):
-        predict, feature_prediction = predictor(test_set[i:i + 1, :], training_result)
+        predict, feature_prediction = predictor(
+            test_set[i:i + 1, :], training_result)
         confusion_matrix[predict, test_target_set[i], test_set.shape[1]] += 1
 
         for j in range(0, test_set.shape[1]):
-            confusion_matrix[feature_prediction[0, j], test_target_set[i], j] += 1
+            confusion_matrix[feature_prediction[0, j],
+                             test_target_set[i], j] += 1
 
     accuracy = None
 
@@ -151,7 +172,8 @@ def train_and_test(train_set, train_target_set, test_set, test_target_set):
         accuracy = 0 if sum_all == 0 else (sum_correct_case / sum_all * 100)
 
         if i < test_set.shape[1]:
-            print("- The accuracy of the feature {0}'s prediction = {1}".format(i + 1, round(accuracy, 3)))
+            print(
+                "- The accuracy of the feature {0}'s prediction = {1}".format(i + 1, round(accuracy, 3)))
 
     print("=======================================")
     print("The Confusion Matrix of Testing set:")
@@ -168,5 +190,7 @@ if __name__ == "__main__":
 
     # Perform Naive Bayes algorithm
     if data is not None:
-        training_set, training_target_set, testing_set, testing_target_set = create_data_set(data)
-        train_and_test(training_set, training_target_set, testing_set, testing_target_set)
+        training_set, training_target_set, testing_set, testing_target_set = create_data_set(
+            data)
+        train_and_test(training_set, training_target_set,
+                       testing_set, testing_target_set)
