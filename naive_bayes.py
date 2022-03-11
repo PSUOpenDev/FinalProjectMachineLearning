@@ -9,7 +9,6 @@ import numpy as np
 from sklearn.metrics import accuracy_score, confusion_matrix
 import math
 
-
 # GLOBAL VARIABLES
 MEAN = 0
 STANDARD_DEVIATION = 1
@@ -22,6 +21,9 @@ SQRT_2PI = math.sqrt(2.0 * math.pi)
 # THRESHOLD
 dx_1 = 0.0001
 dx_2 = 1e-308
+
+# PATH FILES
+DATA_PATH = "./processed_data.csv"
 
 
 def good_probability(target_set):
@@ -61,6 +63,7 @@ def training(data_set, target_set):
     not_good_index_set = np.where(target_set == 0)
 
     good_set = np.array([data_set[i, :] for i in good_index_set[0]])
+
     not_good_set = np.array([data_set[i, :] for i in not_good_index_set[0]])
 
     result[GOOD_STATISTIC] = [feature_statistic(good_set, col) for col in range(0, good_set.shape[1])]
@@ -87,7 +90,6 @@ def predictor(data_input, training_result):
             training_result[NOT_GOOD_STATISTIC][i][MEAN],
             training_result[NOT_GOOD_STATISTIC][i][STANDARD_DEVIATION]
         )
-
         good_result += good_norm
         not_good += not_good_norm
 
@@ -109,9 +111,71 @@ def readfile(filename):
         return None
 
 
-if __name__ == "__main__":
-    # PATH FILES
-    DATA_PATH = "./processed_data.csv"
+def create_data_set(draw_data):
+    num_of_col = draw_data.shape[1]
 
-    # Read data
-    data = readfile(DATA_PATH)
+    # get even rows 
+    training_set = draw_data[1::2, 0:num_of_col - 1]
+
+    # get even row of the last column
+    training_target_set = draw_data[1::2, num_of_col - 1:num_of_col]
+
+    # get even rows 
+    testing_set = draw_data[::2, 0:num_of_col - 1]
+
+    # get odd row of last column
+    testing_target_set = draw_data[::2, num_of_col -
+                                        1:num_of_col]
+
+    return training_set, training_target_set.astype(int), testing_set, testing_target_set.astype(int)
+
+
+def train_and_test(training_set, training_target_set, testing_set, testing_target_set):
+    '''
+        Run training and testing
+    '''
+    training_result = training(training_set, training_target_set)
+    print("== The Prediction for Testing set======")
+
+    confusion_matrix = np.full(
+        (2, 2), 0).astype(int)
+
+    for i in range(0, testing_set.shape[0]):
+
+        predict, feature_prediction = predictor(
+            testing_set[i:i + 1, :], training_result)
+
+        confusion_matrix[predict, testing_target_set[i],
+                         testing_set.shape[1]] += 1
+
+        for j in range(0, testing_set.shape[1]):
+            confusion_matrix[feature_prediction[0, j],
+                             testing_target_set[i], j] += 1
+
+    accuracy = None
+
+    for i in range(0, testing_set.shape[1] + 1):
+        accuracy = 0.0
+
+        cfm = confusion_matrix[:, :, i]
+
+        diagonal = np.diagonal(cfm)
+        sum_correct_case = np.sum(diagonal)
+        sum_all = np.sum(cfm)
+
+        accuracy = 0 if sum_all == 0 else (sum_correct_case / sum_all * 100)
+
+        if i < testing_set.shape[1]:
+            print(
+                "- The accuracy of the feature {0}'s prediction = {1}".format(i + 1, round(accuracy, 3)))
+
+    print("=======================================")
+    print("The Confusion Matrix of Testing set:")
+    print(confusion_matrix[:, :, testing_set.shape[1]])
+
+    print("## Final accuracy  = ", round(accuracy, 3))
+
+
+training_set, training_target_set, testing_set, testing_target_set = readfile(DATA_PATH)
+
+train_and_test(training_set, training_target_set, testing_set, testing_target_set)
