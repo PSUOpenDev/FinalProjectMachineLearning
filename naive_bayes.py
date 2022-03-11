@@ -127,6 +127,61 @@ def create_data_set(draw_data):
     return training_set, training_target_set.astype(int), testing_set, testing_target_set.astype(int)
 
 
+def train_and_test(training_set, training_target_set, testing_set, testing_target_set):
+    '''
+        Run training and testing
+    '''
+    training_result = training(training_set, training_target_set)
+    print("== The Prediction for Testing set======")
+
+    confusion_matrix = np.full(
+        (2, 2), 0).astype(int)
+
+    for i in range(0, testing_set.shape[0]):
+
+        predict, feature_prediction = predictor(
+            testing_set[i:i+1, :], training_result)
+
+        confusion_matrix[predict, testing_target_set[i],
+                         testing_set.shape[1]] += 1
+
+        for j in range(0, testing_set.shape[1]):
+            confusion_matrix[feature_prediction[0, j],
+                             testing_target_set[i], j] += 1
+
+    accuracy = None
+
+    for i in range(0, testing_set.shape[1] + 1):
+        accuracy = 0.0
+
+        cfm = confusion_matrix[:, :, i]
+
+        diagonal = np.diagonal(cfm)
+        sum_correct_case = np.sum(diagonal)
+        sum_all = np.sum(cfm)
+        
+        accuracy = 0 if sum_all == 0 else (sum_correct_case/sum_all * 100)
+
+        if i < testing_set.shape[1]:
+            print(
+                "- The accuracy of the feature {0}'s prediction = {1}".format(i + 1, round(accuracy, 3)))
+
+    print("=======================================")
+    print("The Confusion Matrix of Testing set:")
+    print(confusion_matrix[:, :, testing_set.shape[1]])
+
+    print("## Final accuracy  = ", round(accuracy, 3))
+
+
+training_set, training_target_set, testing_set, testing_target_set = read_csv(
+    './spambase/spambase.data')
+
+train_and_test(training_set, training_target_set,
+               testing_set, testing_target_set)
+
+
+
+
 if __name__ == "__main__":
     # PATH FILES
     DATA_PATH = "./processed_data.csv"
