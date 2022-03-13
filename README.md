@@ -10,14 +10,18 @@
 > ### Numpy: a library for the Python programming language, supporting for large, multi-dimensional arrays and matrices.
 > ### Matplotlib: a plotting library for the Python programming language. It's a extension of Numpy library.
 > ### Pandas: another open source Python package, supporting for data reading, data cleansing, data fill, data inspectation, merges and joins. 
-> ### sklearn:
+> ### sklearn: a library for machine learning in Python. Sklearn provides efficient tools for machine learning and statistical modeling.
 > ### Tensorflow: a free and open-source software library for machine learning. It focus on training and inference of deep neural networks
-> 
-
-
+> ### Keras: a high-level neural network library that runs on top of TensorFlow
 
 # Source Used
-
+> ### https://www.kaggle.com/henriqueyamahata/bank-marketing
+> ### https://numpy.org/doc/stable/user/index.html
+> ### https://matplotlib.org/stable/users/index#
+> ### https://scikit-learn.org/stable/modules/svm.html
+> ### https://pandas.pydata.org/docs/user_guide/index.html
+> ### https://keras.io/getting_started/intro_to_keras_for_engineers/
+> ### https://www.tensorflow.org/hub/tf2_saved_model
 
 
 # How to run
