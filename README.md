@@ -25,3 +25,7 @@
 
 
 # How to run
+> ### To clone project: git clone https://github.com/PSUOpenDev/FinalProjectMachineLearning.git
+> ### To install all dependencies: pip install -r requirements.txt
+> ### To run Naive Bayes model: py naive_bayes.py
+> ### To run Natural Network: py nn.py 
