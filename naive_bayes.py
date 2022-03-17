@@ -6,9 +6,12 @@
 
 
 # Dependencies
+import itertools
+
 import numpy as np
 import math
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 # GLOBAL VARIABLES
 MEAN = 0
@@ -79,7 +82,7 @@ def training(data_set, target_set):
 
         good_set = np.array([data_training[i, :] for i in good_index_set[0]])
         not_good_set = np.array([data_training[i, :]
-                                for i in not_good_index_set[0]])
+                                 for i in not_good_index_set[0]])
 
         result[GOOD_STATISTIC] = [feature_statistic(
             good_set, col) for col in range(0, good_set.shape[1])]
@@ -118,7 +121,7 @@ def training(data_set, target_set):
             sum_all = np.sum(cfm)
 
             accuracy = 0 if sum_all == 0 else (
-                sum_correct_case / sum_all * 100)
+                    sum_correct_case / sum_all * 100)
 
             if i < test_set.shape[1]:
                 print('Training accuracy for feature {0}''s = {1}'.format(
@@ -128,7 +131,7 @@ def training(data_set, target_set):
         prob_dict = np.array(prob_dict)
 
         avg_prob = np.array([p[1] for p in prob_dict]).mean()
-        
+
         for p in prob_dict:
             if p[1] < avg_prob:
                 ignore_col[int(p[0])] = True
@@ -179,7 +182,7 @@ def predictor(data_input, training_result, ignoring_column):
             not_good += not_good_norm
 
             feature_prediction[i] = 1 if good_norm + \
-                training_result[GOOD] > not_good_norm + training_result[NOT_GOOD] else 0
+                                         training_result[GOOD] > not_good_norm + training_result[NOT_GOOD] else 0
 
     return 1 if good_result > not_good else 0, feature_prediction
 
@@ -216,7 +219,6 @@ def train_and_test(train_set, train_target_set, test_set, test_target_set):
         confusion_matrix[predict, test_target_set[i], test_set.shape[1]] += 1
 
         for j in range(0, test_set.shape[1]):
-
             confusion_matrix[feature_prediction[j],
                              test_target_set[i], j] += 1
 
@@ -236,14 +238,44 @@ def train_and_test(train_set, train_target_set, test_set, test_target_set):
 
     print("=======================================")
     print("The Confusion Matrix of Testing set:")
-    print(confusion_matrix[:, :, test_set.shape[1]])
+    # print(confusion_matrix[:, :, test_set.shape[1]])
     print("## Final accuracy  = ", round(accuracy, 3))
+    cm = confusion_matrix[:, :, test_set.shape[1]]
+    print(cm)
+    plotting_confusion_matrix(cm)
+    plotting_accuracy(20, 50)
+
+
+def plotting_confusion_matrix(cm):
+    plt.clf()
+    ax = plt.gca()
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.OrRd)
+    plt.title("Bank Marketing Prediction Results")
+    plt.colorbar()
+    threshold = cm.max() / 2
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, cm[i, j], horizontalalignment='center', color="white" if cm[i, j] > threshold else "black")
+    plt.tight_layout()
+    plt.show()
+
+
+def plotting_accuracy(acc1, acc2):
+    plt.clf()
+    plt.title('Compare accuracy of training and accuracy of testing')
+    plt.xlabel('Accuracy Name')
+    plt.ylabel('Accuracy Value')
+    x_axis = ['Accuracy 1', 'Accuracy 2']
+    y_axis = [acc1, acc2]
+    plt.bar(x_axis, y_axis)
+    plt.show()
 
 
 if __name__ == "__main__":
     # PATH FILES
     DATA_PATH = "./processing_dataset.csv"
-    #DATA_PATH = "./processed_data.csv"
+    # DATA_PATH = "./processed_data.csv"
 
     # Read pre-processed file
     data = read_file(DATA_PATH)
