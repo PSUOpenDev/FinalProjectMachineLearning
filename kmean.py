@@ -1,7 +1,9 @@
+import itertools
 import numpy as np
 import pandas as pd
 import copy
 import math
+from matplotlib import pyplot as plt
 from sklearn.metrics import accuracy_score, confusion_matrix
 
 k_def = 2
@@ -146,6 +148,21 @@ def accuracy(actual, predicted, predict_case=None):
         return accuracies[predict_case]
 
 
+def plotting_confusion_matrix(matrix):
+    plt.clf()
+    ax = plt.gca()
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    plt.imshow(matrix, interpolation='nearest', cmap=plt.cm.YlGn)
+    plt.title("Bank Marketing Prediction Results")
+    plt.colorbar()
+    threshold = matrix.max() / 2
+    for i, j in itertools.product(range(matrix.shape[0]), range(matrix.shape[1])):
+        plt.text(j, i, matrix[i, j], horizontalalignment='center', color="white" if matrix[i, j] > threshold else "black")
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == "__main__":
     # read and preprocess data
     raw_data = read_data("./bank-additional-full.csv")
@@ -165,6 +182,7 @@ if __name__ == "__main__":
     print("Test Accuracy:", test_accuracy)
     print("Confusion Matrix:")
     if case == 0:
-        print(confusion_matrix(test_set['y'].tolist(), test_predict))
+        cm = confusion_matrix(test_set['y'].tolist(), test_predict)
     else:
-        print(confusion_matrix(test_set['y'].tolist(), np.array(np.ones(shape=len(test_predict)) - test_predict).tolist()))
+        cm = confusion_matrix(test_set['y'].tolist(), np.array(np.ones(shape=len(test_predict)) - test_predict).tolist())
+    plotting_confusion_matrix(cm)
