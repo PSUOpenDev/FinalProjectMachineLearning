@@ -121,17 +121,17 @@ def training(data_set, target_set):
                 sum_correct_case / sum_all * 100)
 
             if i < test_set.shape[1]:
+                print('Training accuracy for feature {0}''s = {1}'.format(
+                    i + 1, accuracy))
                 prob_dict.append((i, accuracy))
 
         prob_dict = np.array(prob_dict)
-        s = 0
-        for p in prob_dict:
-            s += p[1]
-        avg_prob = s / len(prob_dict)
 
+        avg_prob = np.array([p[1] for p in prob_dict]).mean()
+        
         for p in prob_dict:
             if p[1] < avg_prob:
-                ignore_col[p[0]] = True
+                ignore_col[int(p[0])] = True
         return ignore_col
 
     # Step 1: Divide training set into two parts with the ratio to A=7: B=3
@@ -162,7 +162,7 @@ def predictor(data_input, training_result, ignoring_column):
 
     for i in range(0, data_input.shape[0]):
 
-        if ignoring_column is None or (ignoring_column is not None and i not in ignoring_column):
+        if ignoring_column is None or ((ignoring_column is not None) and (i not in ignoring_column)):
             good_norm = log_normal_dist(
                 data_input[i],
                 training_result[GOOD_STATISTIC][i][MEAN],
@@ -204,6 +204,8 @@ def create_data_set(draw_data):
 
 def train_and_test(train_set, train_target_set, test_set, test_target_set):
     training_result, ignore_col = training(train_set, train_target_set)
+    # ignore_col = None
+    print('Ignore column:', ignore_col)
 
     confusion_matrix = np.full((2, 2, test_set.shape[1] + 1), 0).astype(int)
 
