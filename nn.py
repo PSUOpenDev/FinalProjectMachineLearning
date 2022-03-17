@@ -1,3 +1,7 @@
+# By: Michael Fulton
+# ML Final project
+# Winter 2022
+
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
