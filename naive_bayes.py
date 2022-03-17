@@ -82,6 +82,7 @@ def training(data_set, target_set):
 
         result[GOOD_STATISTIC] = [feature_statistic(
             good_set, col) for col in range(0, good_set.shape[1])]
+        
         result[NOT_GOOD_STATISTIC] = [feature_statistic(
             not_good_set, col) for col in range(0, not_good_set.shape[1])]
 
@@ -153,11 +154,14 @@ def train_and_test(train_set, train_target_set, test_set, test_target_set):
     confusion_matrix = np.full((2, 2, test_set.shape[1] + 1), 0).astype(int)
 
     for i in range(0, test_set.shape[0]):
+
         predict, feature_prediction = predictor(
             test_set[i:i + 1, :], training_result)
+
         confusion_matrix[predict, test_target_set[i], test_set.shape[1]] += 1
 
         for j in range(0, test_set.shape[1]):
+            
             confusion_matrix[feature_prediction[0, j],
                              test_target_set[i], j] += 1
 
