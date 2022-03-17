@@ -2,12 +2,11 @@ import numpy as np
 import pandas as pd
 import copy
 import math
-from sklearn.metrics import accuracy_score
-
+from sklearn.metrics import accuracy_score, confusion_matrix
 
 k_def = 2
 r_def = 10
-epsilon = 0.0025
+epsilon = 0.000125
 
 
 # Read data from file
@@ -164,3 +163,8 @@ if __name__ == "__main__":
     test_predict = k_means_test(centroids, test_data, k_def)
     test_accuracy = accuracy(test_set['y'].tolist(), test_predict, case)
     print("Test Accuracy:", test_accuracy)
+    print("Confusion Matrix:")
+    if case == 0:
+        print(confusion_matrix(test_set['y'].tolist(), test_predict))
+    else:
+        print(confusion_matrix(test_set['y'].tolist(), np.array(np.ones(shape=len(test_predict)) - test_predict).tolist()))
