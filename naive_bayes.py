@@ -124,8 +124,8 @@ def training(data_set, target_set):
                     sum_correct_case / sum_all * 100)
 
             if i < test_set.shape[1]:
-                print('Training accuracy for feature {0}''s = {1}'.format(
-                    i + 1, accuracy))
+                # print('Training accuracy for feature {0}''s = {1}'.format(
+                #     i + 1, accuracy))
                 prob_dict.append((i, accuracy))
 
         prob_dict = np.array(prob_dict)
@@ -208,33 +208,70 @@ def create_data_set(draw_data):
 def train_and_test(train_set, train_target_set, test_set, test_target_set):
     training_result, ignore_col = training(train_set, train_target_set)
     # ignore_col = None
-    print('Ignore column:', ignore_col)
+    # print('Ignore column:', ignore_col)
 
-    confusion_matrix = np.full((2, 2, test_set.shape[1] + 1), 0).astype(int)
+    confusion_matrix_training = np.full(
+        (2, 2, train_set.shape[1] + 1), 0).astype(int)
 
-    for i in range(0, test_set.shape[0]):
+    for i in range(0, train_set.shape[0]):
         predict, feature_prediction = predictor(
-            test_set[i, :], training_result, ignore_col)
+            train_set[i, :], training_result, ignore_col)
 
-        confusion_matrix[predict, test_target_set[i], test_set.shape[1]] += 1
+        confusion_matrix_training[predict,
+                                  train_target_set[i], train_set.shape[1]] += 1
 
         for j in range(0, test_set.shape[1]):
-            confusion_matrix[feature_prediction[j],
-                             test_target_set[i], j] += 1
+
+            confusion_matrix_training[feature_prediction[j],
+                                      train_target_set[i], j] += 1
 
     accuracy = None
 
-    for i in range(0, test_set.shape[1] + 1):
-        cfm = confusion_matrix[:, :, i]
+    for i in range(0, train_set.shape[1] + 1):
+        cfm = confusion_matrix_training[:, :, i]
         diagonal = np.diagonal(cfm)
         sum_correct_case = np.sum(diagonal)
         sum_all = np.sum(cfm)
 
         accuracy = 0 if sum_all == 0 else (sum_correct_case / sum_all * 100)
 
-        if i < test_set.shape[1]:
-            print(
-                "- The accuracy of the feature {0}'s prediction = {1}".format(i + 1, round(accuracy, 3)))
+        # if i < test_set.shape[1]:
+        #     print(
+        #         "- The accuracy of the feature {0}'s prediction = {1}".format(i + 1, round(accuracy, 3)))
+
+    print("=======================================")
+    print("The Confusion Matrix of Training set:")
+    print(confusion_matrix_training[:, :, train_set.shape[1]])
+    print("## Final accuracy = ", round(accuracy, 3))
+
+    confusion_matrix_testing = np.full(
+        (2, 2, test_set.shape[1] + 1), 0).astype(int)
+
+    for i in range(0, test_set.shape[0]):
+        predict, feature_prediction = predictor(
+            test_set[i, :], training_result, ignore_col)
+
+        confusion_matrix_testing[predict,
+                                 test_target_set[i], test_set.shape[1]] += 1
+
+        for j in range(0, test_set.shape[1]):
+
+            confusion_matrix_testing[feature_prediction[j],
+                                     test_target_set[i], j] += 1
+
+    accuracy = None
+
+    for i in range(0, test_set.shape[1] + 1):
+        cfm = confusion_matrix_testing[:, :, i]
+        diagonal = np.diagonal(cfm)
+        sum_correct_case = np.sum(diagonal)
+        sum_all = np.sum(cfm)
+
+        accuracy = 0 if sum_all == 0 else (sum_correct_case / sum_all * 100)
+
+        # if i < test_set.shape[1]:
+        #     print(
+        #         "- The accuracy of the feature {0}'s prediction = {1}".format(i + 1, round(accuracy, 3)))
 
     print("=======================================")
     print("The Confusion Matrix of Testing set:")
