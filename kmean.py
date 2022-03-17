@@ -1,73 +1,106 @@
 import numpy as np
-import os
+import pandas as pd
+import copy
+import math
 
-import matplotlib.pyplot as plt
 
-""" x = np.linspace(0,20,100)
-plt.plot(x, np.sin(x))
-plt.show()
- """
-def compute_euclidean_distance(point, centroid):
-    return np.sqrt(np.sum((point - centroid)**2))
+k_def = 2
+r_def = 10
+epsilon = 0.0025
 
-def assign_label_cluster(distance, data_point, centroids):
-    index_of_minimum = min(distance, key=distance.get)
-    return [index_of_minimum, data_point, centroids[index_of_minimum]]
 
-def compute_new_centroids(cluster_label, centroids):
-    return np.array(cluster_label + centroids)/2
-    
-def iterate_k_means(data_points, centroids, total_iteration):
-    label = []
-    cluster_label = []
-    total_points = len(data_points)
-    k = len(centroids)
-    
-    for iteration in range(0, total_iteration):
-        for index_point in range(0, total_points):
-            distance = {}
-            for index_centroid in range(0, k):
-                distance[index_centroid] = compute_euclidean_distance(data_points[index_point], centroids[index_centroid])
-            label = assign_label_cluster(distance, data_points[index_point], centroids)
-            centroids[label[0]] = compute_new_centroids(label[1], centroids[label[0]])
+# Read data from file
+def read_data(filename):
+    return pd.read_table(filename, delimiter=';', engine='python')
 
-            if iteration == (total_iteration - 1):
-                cluster_label.append(label)
 
-    return [cluster_label, centroids]
+# Pre-process data
+def preprocess(dataset):
+    keys = [[],
+            ["admin.", "unknown", "unemployed", "management", "housemaid", "entrepreneur", "student", "blue-collar",
+             "self-employed", "retired", "technician", "services"],
+            ["married", "divorced", "single", "unknown"],
+            ["basic.4y", "basic.6y", "basic.9y", "high.school", "illiterate", "professional.course",
+             "university.degree", "unknown"],
+            ["no", "yes", "unknown"],
+            ["no", "yes", "unknown"],
+            ["no", "yes", "unknown"],
+            ["telephone", "cellular"],
+            ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"],
+            ["mon", "tue", "wed", "thu", "fri"],
+            [], [], [], [],
+            ["failure", "nonexistent", "success"],
+            [], [], [], [], [], [],
+            ["no", "yes"]]
+    columns = dataset.columns.values
+    for i in range(dataset.shape[1]):
+        for j in range(len(keys[i])):
+            dataset[columns[i]] = dataset[columns[i]].replace([keys[i][j]], j)
+    # dataset.to_csv("./new_processed_data.csv", index=False)
 
-def print_label_data(result):
-    print("Result of k-Means Clustering: \n")
-    for data in result[0]:
-        print("data point: {}".format(data[1]))
-        print("cluster number: {} \n".format(data[0]))
-    print("Last centroids position: \n {}".format(result[1]))
 
-def create_centroids():
-    centroids = []
-    centroids.append([3,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,3,999,0,1.4,94.465,-41.8,4.864,5228.1,0])
-    centroids.append([5,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,1,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,0,1,999,0,1.4,93.444,-36.1,4.97,5228.1,1])
-    
-    return np.array(centroids)
+# Compute distance square
+def distance_square(a, b):
+    return np.sum((a - b) ** 2)
 
-def plot_results(dataset,  centroids, k):
-  plt.figure(figsize=(80,6))
-  plt.scatter(dataset[:, 0], dataset[:, 1],s=100,c='red',label='Cluster1')
-  plt.scatter(dataset[:, 1], dataset[:, 1],s=100,c='blue',label='Cluster2')
-  
-  plt.scatter(centroids[:, 0], centroids[:, 1], color='black', s=100)
+
+# Check equal arrays
+def is_not_change(a, b):
+    if len(a) == 0 or len(b) == 0:
+        return False
+    sub = np.array(math.fabs(a - b))
+    if np.max(sub) <= epsilon:
+        return True
+    else:
+        return False
+
+
+def k_means(dataset, k, r):
+    # init result lists
+    min_errors = math.inf
+    best_centroids = []
+    best_clusters = []
+    for _ in range(r):
+        # init k centroids randomly
+        centroids = dataset.sample(k).values
+        # clustering data
+        iteration = 1
+        while True:
+            # init clusters
+            clusters = [pd.DataFrame(columns=dataset.columns.values) for _ in range(k)]
+            # update clusters
+            for datapoint in dataset.values:
+                min_distance_square = math.inf
+                min_centroid_pos = -1
+                for pos in range(k):
+                    distance_sq = distance_square(datapoint, centroids[pos])
+                    if distance_sq <= min_distance_square:
+                        min_distance_square = distance_sq
+                        min_centroid_pos = pos
+                clusters[min_centroid_pos].loc[len(clusters[min_centroid_pos])] = datapoint
+            # update centroids, save old centroids
+            old_centroids = copy.deepcopy(centroids)
+            for ik in range(k):
+                pass
+            # check stopping condition
+            if is_not_change(old_centroids, centroids):
+                break
+            else:
+                iteration += 1
+        # calculate objective func and save values
+        sum_errors = 0
+        for i in range(k):
+            for x in clusters[i]:
+                sum_errors += distance_square(x.values, centroids[i])
+        if sum_errors <= min_errors:
+            min_errors = sum_errors
+            best_centroids = copy.deepcopy(centroids)
+            best_clusters = copy.deepcopy(clusters)
+    return min_errors, best_centroids, best_clusters
+
 
 if __name__ == "__main__":
-    filename = "./processed_data.csv"
-
-    data_points = np.genfromtxt(filename, delimiter=",")
-    centroids = create_centroids()
-    total_iteration = 5
-    
-    [cluster_label, new_centroids] = iterate_k_means(data_points, centroids, total_iteration)
-    #print_label_data([cluster_label, new_centroids])
-    print(len(cluster_label))
-    #print_label_data([cluster_label, new_centroids])
-    plot_results(data_points, new_centroids,k=2)
-    print_label_data([cluster_label, new_centroids])
-    print()
+    raw_data = read_data("./bank-additional-full.csv")
+    preprocess(raw_data)
+    data = raw_data.drop(columns='y')
+    k_means(data, k_def, r_def)
