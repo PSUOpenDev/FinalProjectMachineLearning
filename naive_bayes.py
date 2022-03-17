@@ -7,7 +7,6 @@
 
 # Dependencies
 import itertools
-
 import numpy as np
 import math
 from sklearn.model_selection import train_test_split
@@ -47,7 +46,6 @@ def good_probability(target_set):
 
 def feature_statistic(data_set, column):
     result = {}
-
     result[MEAN] = np.mean(data_set[:, column], dtype=np.float64)
     standard = np.std(data_set[:, column], dtype=np.float64)
     result[STANDARD_DEVIATION] = (standard == 0).astype(int) * dx_1 + standard
@@ -81,14 +79,10 @@ def training(data_set, target_set):
         not_good_index_set = np.where(target_set_training == 0)
 
         good_set = np.array([data_training[i, :] for i in good_index_set[0]])
-        not_good_set = np.array([data_training[i, :]
-                                 for i in not_good_index_set[0]])
+        not_good_set = np.array([data_training[i, :] for i in not_good_index_set[0]])
 
-        result[GOOD_STATISTIC] = [feature_statistic(
-            good_set, col) for col in range(0, good_set.shape[1])]
-
-        result[NOT_GOOD_STATISTIC] = [feature_statistic(
-            not_good_set, col) for col in range(0, not_good_set.shape[1])]
+        result[GOOD_STATISTIC] = [feature_statistic(good_set, col) for col in range(0, good_set.shape[1])]
+        result[NOT_GOOD_STATISTIC] = [feature_statistic(not_good_set, col) for col in range(0, not_good_set.shape[1])]
 
         return result
 
@@ -97,20 +91,17 @@ def training(data_set, target_set):
         prob_dict = list()
 
         print("== The Prediction for Testing set======")
-        confusion_matrix = np.full(
-            (2, 2, test_set.shape[0] + 1), 0).astype(int)
+        confusion_matrix = np.full((2, 2, test_set.shape[0] + 1), 0).astype(int)
 
         for i in range(0, test_set.shape[0]):
-            predict, feature_prediction = predictor(
-                test_set[i, :], training_result, None)
+            predict, feature_prediction = predictor(test_set[i, :], training_result, None)
+
             # confusion matrix for final
-            confusion_matrix[predict, test_target_set[i],
-                             test_set.shape[1]] += 1
+            confusion_matrix[predict, test_target_set[i], test_set.shape[1]] += 1
 
             # confusion matrix for every column
             for j in range(0, test_set.shape[1]):
-                confusion_matrix[feature_prediction[j],
-                                 test_target_set[i], j] += 1
+                confusion_matrix[feature_prediction[j], test_target_set[i], j] += 1
 
         accuracy = None
 
@@ -120,16 +111,13 @@ def training(data_set, target_set):
             sum_correct_case = np.sum(diagonal)
             sum_all = np.sum(cfm)
 
-            accuracy = 0 if sum_all == 0 else (
-                    sum_correct_case / sum_all * 100)
+            accuracy = 0 if sum_all == 0 else (sum_correct_case / sum_all * 100)
 
             if i < test_set.shape[1]:
-                # print('Training accuracy for feature {0}''s = {1}'.format(
-                #     i + 1, accuracy))
                 prob_dict.append((i, accuracy))
 
+        # Calculate the average probability
         prob_dict = np.array(prob_dict)
-
         avg_prob = np.array([p[1] for p in prob_dict]).mean()
 
         for p in prob_dict:
@@ -207,23 +195,14 @@ def create_data_set(draw_data):
 
 def train_and_test(train_set, train_target_set, test_set, test_target_set):
     training_result, ignore_col = training(train_set, train_target_set)
-    # ignore_col = None
-    # print('Ignore column:', ignore_col)
 
-    confusion_matrix_training = np.full(
-        (2, 2, train_set.shape[1] + 1), 0).astype(int)
+    confusion_matrix_training = np.full((2, 2, train_set.shape[1] + 1), 0).astype(int)
 
     for i in range(0, train_set.shape[0]):
-        predict, feature_prediction = predictor(
-            train_set[i, :], training_result, ignore_col)
-
-        confusion_matrix_training[predict,
-                                  train_target_set[i], train_set.shape[1]] += 1
-
+        predict, feature_prediction = predictor(train_set[i, :], training_result, ignore_col)
+        confusion_matrix_training[predict, train_target_set[i], train_set.shape[1]] += 1
         for j in range(0, test_set.shape[1]):
-
-            confusion_matrix_training[feature_prediction[j],
-                                      train_target_set[i], j] += 1
+            confusion_matrix_training[feature_prediction[j], train_target_set[i], j] += 1
 
     accuracy = None
 
@@ -232,32 +211,24 @@ def train_and_test(train_set, train_target_set, test_set, test_target_set):
         diagonal = np.diagonal(cfm)
         sum_correct_case = np.sum(diagonal)
         sum_all = np.sum(cfm)
-
         accuracy = 0 if sum_all == 0 else (sum_correct_case / sum_all * 100)
-
-        # if i < test_set.shape[1]:
-        #     print(
-        #         "- The accuracy of the feature {0}'s prediction = {1}".format(i + 1, round(accuracy, 3)))
 
     print("=======================================")
     print("The Confusion Matrix of Training set:")
-    print(confusion_matrix_training[:, :, train_set.shape[1]])
-    print("## Final accuracy = ", round(accuracy, 3))
+    cm_train = confusion_matrix_training[:, :, train_set.shape[1]]
+    accuracy_train = round(accuracy, 3)
+    print(cm_train)
+    print("## Final accuracy = ", accuracy_train)
+    plotting_confusion_matrix(cm_train)
 
-    confusion_matrix_testing = np.full(
-        (2, 2, test_set.shape[1] + 1), 0).astype(int)
+    confusion_matrix_testing = np.full((2, 2, test_set.shape[1] + 1), 0).astype(int)
 
     for i in range(0, test_set.shape[0]):
-        predict, feature_prediction = predictor(
-            test_set[i, :], training_result, ignore_col)
-
-        confusion_matrix_testing[predict,
-                                 test_target_set[i], test_set.shape[1]] += 1
+        predict, feature_prediction = predictor(test_set[i, :], training_result, ignore_col)
+        confusion_matrix_testing[predict, test_target_set[i], test_set.shape[1]] += 1
 
         for j in range(0, test_set.shape[1]):
-
-            confusion_matrix_testing[feature_prediction[j],
-                                     test_target_set[i], j] += 1
+            confusion_matrix_testing[feature_prediction[j], test_target_set[i], j] += 1
 
     accuracy = None
 
@@ -266,21 +237,16 @@ def train_and_test(train_set, train_target_set, test_set, test_target_set):
         diagonal = np.diagonal(cfm)
         sum_correct_case = np.sum(diagonal)
         sum_all = np.sum(cfm)
-
         accuracy = 0 if sum_all == 0 else (sum_correct_case / sum_all * 100)
-
-        # if i < test_set.shape[1]:
-        #     print(
-        #         "- The accuracy of the feature {0}'s prediction = {1}".format(i + 1, round(accuracy, 3)))
 
     print("=======================================")
     print("The Confusion Matrix of Testing set:")
-    # print(confusion_matrix[:, :, test_set.shape[1]])
-    print("## Final accuracy  = ", round(accuracy, 3))
-    cm = confusion_matrix[:, :, test_set.shape[1]]
-    print(cm)
-    plotting_confusion_matrix(cm)
-    plotting_accuracy(20, 50)
+    cm_test = confusion_matrix_testing[:, :, test_set.shape[1]]
+    print(cm_test)
+    accuracy_test = round(accuracy, 3)
+    print("## Final accuracy  = ", accuracy_test)
+    plotting_confusion_matrix(cm_test)
+    plotting_accuracy(accuracy_train, accuracy_test)
 
 
 def plotting_confusion_matrix(cm):
@@ -301,9 +267,9 @@ def plotting_confusion_matrix(cm):
 def plotting_accuracy(acc1, acc2):
     plt.clf()
     plt.title('Compare accuracy of training and accuracy of testing')
-    plt.xlabel('Accuracy Name')
+    plt.xlabel('Accuracy')
     plt.ylabel('Accuracy Value')
-    x_axis = ['Accuracy 1', 'Accuracy 2']
+    x_axis = ['For Training', 'For Testing']
     y_axis = [acc1, acc2]
     plt.bar(x_axis, y_axis)
     plt.show()
@@ -312,14 +278,11 @@ def plotting_accuracy(acc1, acc2):
 if __name__ == "__main__":
     # PATH FILES
     DATA_PATH = "./processing_dataset.csv"
-    # DATA_PATH = "./processed_data.csv"
 
     # Read pre-processed file
     data = read_file(DATA_PATH)
 
     # Perform Naive Bayes algorithm
     if data is not None:
-        training_set, training_target_set, testing_set, testing_target_set = create_data_set(
-            data)
-        train_and_test(training_set, training_target_set,
-                       testing_set, testing_target_set)
+        training_set, training_target_set, testing_set, testing_target_set = create_data_set(data)
+        train_and_test(training_set, training_target_set, testing_set, testing_target_set)
