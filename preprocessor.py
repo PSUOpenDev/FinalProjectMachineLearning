@@ -1,3 +1,8 @@
+# By Michael Fulton
+# ML Final Project
+# Winter 2022
+
+
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
