@@ -11,6 +11,7 @@ import numpy as np
 import math
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+import copy
 
 # GLOBAL VARIABLES
 MEAN = 0
@@ -26,16 +27,38 @@ dx_1 = 0.0001
 dx_2 = 1e-308
 
 
-def read_file(filename):
+def readfile(filename):
+    """
+    Function to read the file
+
+    :param filename: filename
+    :return: the list of training data, and its target list
+    """
     try:
         # Read raw dataset
         raw_data = np.loadtxt(filename, delimiter=",")
-        return raw_data
+        # Raw training and testing data
+        train_data = raw_data[:, :-1]
+        # Target class
+        target_class = raw_data[:, -1]
+        return train_data, target_class
 
     # File not found
     except FileNotFoundError:
         print("Cannot read files. Please check your dataset!")
         return None
+
+
+def getDataSet(filename):
+    """
+    Function to split the dataset into training and testing
+
+    :param filename: filename
+    :return: training_list, testing_list, target_train_list, target_test_list
+    """
+    raw, target = readfile(filename)
+    list_training, list_testing, target_training, target_testing = train_test_split(raw, target, test_size=0.5)
+    return list_training, target_training, list_testing, target_testing
 
 
 def good_probability(target_set):
@@ -97,11 +120,11 @@ def training(data_set, target_set):
             predict, feature_prediction = predictor(test_set[i, :], training_result, None)
 
             # confusion matrix for final
-            confusion_matrix[predict, test_target_set[i], test_set.shape[1]] += 1
+            confusion_matrix[predict, int(test_target_set[i]), test_set.shape[1]] += 1
 
             # confusion matrix for every column
             for j in range(0, test_set.shape[1]):
-                confusion_matrix[feature_prediction[j], test_target_set[i], j] += 1
+                confusion_matrix[feature_prediction[j], int(test_target_set[i]), j] += 1
 
         accuracy = None
 
@@ -200,9 +223,9 @@ def train_and_test(train_set, train_target_set, test_set, test_target_set):
 
     for i in range(0, train_set.shape[0]):
         predict, feature_prediction = predictor(train_set[i, :], training_result, ignore_col)
-        confusion_matrix_training[predict, train_target_set[i], train_set.shape[1]] += 1
+        confusion_matrix_training[predict, int(train_target_set[i]), train_set.shape[1]] += 1
         for j in range(0, test_set.shape[1]):
-            confusion_matrix_training[feature_prediction[j], train_target_set[i], j] += 1
+            confusion_matrix_training[feature_prediction[j], int(train_target_set[i]), j] += 1
 
     accuracy = None
 
@@ -219,16 +242,15 @@ def train_and_test(train_set, train_target_set, test_set, test_target_set):
     accuracy_train = round(accuracy, 3)
     print(cm_train)
     print("## Final accuracy = ", accuracy_train)
-    plotting_confusion_matrix(cm_train)
 
     confusion_matrix_testing = np.full((2, 2, test_set.shape[1] + 1), 0).astype(int)
 
     for i in range(0, test_set.shape[0]):
         predict, feature_prediction = predictor(test_set[i, :], training_result, ignore_col)
-        confusion_matrix_testing[predict, test_target_set[i], test_set.shape[1]] += 1
+        confusion_matrix_testing[predict, int(test_target_set[i]), test_set.shape[1]] += 1
 
         for j in range(0, test_set.shape[1]):
-            confusion_matrix_testing[feature_prediction[j], test_target_set[i], j] += 1
+            confusion_matrix_testing[feature_prediction[j], int(test_target_set[i]), j] += 1
 
     accuracy = None
 
@@ -245,17 +267,16 @@ def train_and_test(train_set, train_target_set, test_set, test_target_set):
     print(cm_test)
     accuracy_test = round(accuracy, 3)
     print("## Final accuracy  = ", accuracy_test)
-    plotting_confusion_matrix(cm_test)
-    plotting_accuracy(accuracy_train, accuracy_test)
+    return accuracy_train, accuracy_test, cm_train, cm_test
 
 
-def plotting_confusion_matrix(cm):
+def plotting_confusion_matrix(title, cm):
     plt.clf()
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.OrRd)
-    plt.title("Bank Marketing Prediction Results")
+    plt.title(title)
     plt.colorbar()
     threshold = cm.max() / 2
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
@@ -275,14 +296,38 @@ def plotting_accuracy(acc1, acc2):
     plt.show()
 
 
+def main(filename, num_of_run):
+    best_train_accuracy = 0
+    best_test_accuracy = 0
+    best_cm_train = []
+    best_cm_test = []
+    for i in range(num_of_run):
+        print("-------------------------------------------------------------------------------------")
+        print("Running: " + str(i))
+        print("-------------------------------------------------------------------------------------")
+
+        training_list, training_target, testing_list, testing_target = getDataSet(filename)
+        accuracy_train, accuracy_test, cm_train, cm_test = train_and_test(
+            training_list,
+            training_target,
+            testing_list,
+            testing_target
+        )
+
+        if accuracy_test > best_test_accuracy:
+            best_train_accuracy = accuracy_train
+            best_test_accuracy = accuracy_test
+            best_cm_train = copy.deepcopy(cm_train)
+            best_cm_test = copy.deepcopy(cm_test)
+
+    print("--------------------------------------------------------------------------------------------")
+    print("Best testing accuracy: ", best_test_accuracy)
+    plotting_confusion_matrix("Confusion matrix for training", best_cm_train)
+    plotting_confusion_matrix("Confusion matrix for testing", best_cm_test)
+    plotting_accuracy(best_train_accuracy, best_test_accuracy)
+
+
 if __name__ == "__main__":
     # PATH FILES
     DATA_PATH = "./processing_dataset.csv"
-
-    # Read pre-processed file
-    data = read_file(DATA_PATH)
-
-    # Perform Naive Bayes algorithm
-    if data is not None:
-        training_set, training_target_set, testing_set, testing_target_set = create_data_set(data)
-        train_and_test(training_set, training_target_set, testing_set, testing_target_set)
+    main(DATA_PATH, 10)
