@@ -28,12 +28,6 @@ dx_2 = 1e-308
 
 
 def readfile(filename):
-    """
-    Function to read the file
-
-    :param filename: filename
-    :return: the list of training data, and its target list
-    """
     try:
         # Read raw dataset
         raw_data = np.loadtxt(filename, delimiter=",")
@@ -50,12 +44,6 @@ def readfile(filename):
 
 
 def getDataSet(filename):
-    """
-    Function to split the dataset into training and testing
-
-    :param filename: filename
-    :return: training_list, testing_list, target_train_list, target_test_list
-    """
     raw, target = readfile(filename)
     list_training, list_testing, target_training, target_testing = train_test_split(raw, target, test_size=0.5)
     return list_training, target_training, list_testing, target_testing
