@@ -330,7 +330,19 @@ def main(filename, num_of_run):
     plotting_accuracy(best_train_accuracy, best_test_accuracy)
 
 
+def read_file(filename):
+    try:
+        # Read raw dataset
+        raw_data = np.loadtxt(filename, delimiter=",")
+        return raw_data
+
+    # File not found
+    except FileNotFoundError:
+        print("Cannot read files. Please check your dataset!")
+        return None
+
 if __name__ == "__main__":
-    # PATH FILES
     DATA_PATH = "./processing_dataset.csv"
     main(DATA_PATH, 10)
+
+
